@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//    http://www.apache.org/licenses/LICENSE-2.0
+// http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,12 @@
 package com.google.codeu.mathlang.impl;
 
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.Queue;
 
+import com.google.codeu.mathlang.core.tokens.NumberToken;
+import com.google.codeu.mathlang.core.tokens.StringToken;
+import com.google.codeu.mathlang.core.tokens.SymbolToken;
 import com.google.codeu.mathlang.core.tokens.Token;
 import com.google.codeu.mathlang.parsing.TokenReader;
 
@@ -27,20 +32,69 @@ import com.google.codeu.mathlang.parsing.TokenReader;
 // work with the test of the system.
 public final class MyTokenReader implements TokenReader {
 
+  private String source;
+  private Queue<Token> tokens = new LinkedList<Token>();
+
   public MyTokenReader(String source) {
-    // Your token reader will only be given a string for input. The string will
-    // contain the whole source (0 or more lines).
+    this.source = source;
+    for (int i = 0; i < source.length(); i++) {
+      int temp = 0;
+      if (source.charAt(i) == ' ' && i == 0) {
+
+        if (symbol(source.charAt(i))) {
+          SymbolToken st = new SymbolToken(source.charAt(i));
+          tokens.add(st);
+        }
+
+        else if (alphabet(source.charAt(i))) {
+          int end = 0;
+          for (int j = i; j < source.length(); j++) {
+            if (source.charAt(j) == ' ') {
+              end = j - 1;
+              j = source.length();
+            }
+          }
+          StringToken st = new StringToken(source.substring(i, end));
+          tokens.add(st);
+        }
+
+        else if (number(source.charAt(i))) {
+          int end = 0;
+          for (int j = i; j < source.length(); j++) {
+            if (source.charAt(j) == ' ') {
+              end = j - 1;
+              j = source.length();
+            }
+          }
+
+          int num = Integer.parseInt(source.substring(i, end));
+          NumberToken nt = new NumberToken(num);
+          tokens.add(nt);
+        }
+      }
+
+      else if (source.charAt(i) == ' ') {
+        StringToken st = new StringToken(source.substring(temp, i));
+        tokens.add(st);
+        temp = i + 1;
+      }
+    }
   }
 
   @Override
   public Token next() throws IOException {
-    // Most of your work will take place here. For every call to |next| you should
-    // return a token until you reach the end. When there are no more tokens, you
-    // should return |null| to signal the end of input.
+    return tokens.poll();
+  }
 
-    // If for any reason you detect an error in the input, you may throw an IOException
-    // which will stop all execution.
+  public boolean symbol(char s) {
+    return (s == '-' || s == '+' || s == '=');
+  }
 
-    return null;
+  public boolean alphabet(char s) {
+    return (Character.isAlphabetic(s));
+  }
+
+  public boolean number(char s) {
+    return (Character.isDigit(s));
   }
 }
